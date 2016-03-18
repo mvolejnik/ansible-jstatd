@@ -1,0 +1,7 @@
+---
+# handlers file for jstatd
+- name: restart jstatd
+  service:
+    name: jstatd
+    state: started
+    enabled: yes

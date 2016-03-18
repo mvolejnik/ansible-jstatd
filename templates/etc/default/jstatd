@@ -1,0 +1,9 @@
+
+# use /etd/default/java
+JSTATD_HOME={{ jstatd_home }}
+
+JSTATD_LOG={{ jstatd_log }}
+
+JSTATD_USER={{ jstatd_user }}
+
+JSTATD_POLICY={{ jstatd_policy }}

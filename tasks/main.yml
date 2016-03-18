@@ -1,0 +1,35 @@
+---
+# tasks file for jstatd
+
+- name: Copy jstatd init script (service) Ubuntu/Debian distributions
+  copy:
+    src: "{{ role_path }}/files/etc/init.d/jstatd.ubuntu"
+    dest: "/etc/init.d/jstatd" 
+    owner: "root"
+    group: "root"
+    mode: "u=rx,go=r"
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+  notify:
+    - restart jstatd
+
+- name: Copy jstatd.policy config
+  template:
+    src: "{{ role_path }}/templates/etc/jstatd.policy"
+    dest: "/etc/jstatd.policy"
+    backup: no 
+    owner: "root"
+    group: "root"
+    mode: "ugo=r"
+  notify:
+    - restart jstatd
+
+- name: Create jstatd defaults
+  template: 
+    src: "{{ role_path }}/templates/etc/default/jstatd"
+    dest: "/etc/default/jstatd"
+    backup: no
+    owner: "root"
+    group: "root"
+    mode: "u=rw,go=r"
+  notify:
+    - restart jstatd

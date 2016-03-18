@@ -1,0 +1,8 @@
+---
+# defaults file for jstatd
+jstatd_home: /usr
+jstatd_log: /var/log/jstatd.log
+# change to application user
+jstatd_user: root
+jstatd_policy_permission: "java.security.AllPermission"
+jstatd_policy: "/etc/jstatd.policy"

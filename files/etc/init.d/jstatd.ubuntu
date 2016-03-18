@@ -1,0 +1,200 @@
+#!/bin/sh
+#
+# /etc/init.d/jstatd -- startup script for JVM jstatd Daemon
+#
+### BEGIN INIT INFO
+# Provides:             jstatd
+# Required-Start:       $remote_fs $network
+# Required-Stop:        $remote_fs $network
+# Should-Start:         $named
+# Should-Stop:          $named
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    JVM JSTATD Daemon
+# Description:          Provide jstatd startup/shutdown script
+### END INIT INFO
+
+NAME=jstatd
+DESC="Java VM jstatd"
+DEFAULT="/etc/default/$NAME"
+JSTATD_BIN=jstatd
+SHUTDOWN_WAIT=5
+
+if [ `id -u` -ne 0 ]; then
+	echo "You need root privileges to run this script"
+	exit 1
+fi
+
+. /lib/lsb/init-functions
+
+if [ -r /etc/default/rcS ]; then
+	. /etc/default/rcS
+fi
+
+if [ -f "$DEFAULT" ]; then
+	. "$DEFAULT"
+fi
+
+if [ -z "$JSTATD_HOME" -a -n "$JAVA_HOME" ]; then
+	JSTATD_HOME="$JAVA_HOME"
+fi
+
+if [ -n "$JSTATD_HOME" ]; then
+	export JSTATD_HOME
+fi
+
+if [ -z "$JSTATD" ]; then
+	if [ -n "$JSTATD_HOME" ]; then
+		JSTATD="$JSTATD_HOME/bin/$JSTATD_BIN"
+	else
+		JSTATD="$JSTATD_BIN"
+	fi
+fi
+
+if [ ! -f "$JSTATD" ]; then
+	log_failure_msg "$NAME is not located in \"$JSTATD_HOME\""
+	exit 1
+fi
+
+getent passwd $JSTATD_USER > /dev/null 2>&1
+if [ $? -ne 0 -o -z "$JSTATD_USER" ]; then
+	log_failure_msg "User \"$JSTATD_USER\" does not exist..."
+	exit 1
+fi
+
+if [ ! -x "$JSTATD" ]; then
+	log_failure_msg "$JSTATD is not an executable!"
+	exit 1
+fi
+
+if [ -z "$JSTATD_LOG" ]; then
+	JSTATD_LOG="/var/log/jstatd.log"
+fi
+
+if [ -z "$JSTATD_POLICY" ]; then
+	JSTATD_POLICY="/etc/jstatd.policy"
+fi
+
+# space at beginning needed
+JSTATD_OPTS=" -J-Djava.security.policy=$JSTATD_POLICY"
+
+JSTATD_PIDFILE="/var/run/$NAME/$NAME.pid"
+
+LAUNCH_JSTATD_IN_BACKGROUND=1
+export LAUNCH_JSTATD_IN_BACKGROUND
+
+check_status() {
+	pidofproc -p "$JSTATD_PIDFILE" "$JSTATD" >/dev/null 2>&1
+}
+
+case "$1" in
+ start)
+	log_daemon_msg "Starting $DESC" "$NAME"
+	check_status
+	status_start=$?
+	if [ $status_start -eq 3 ]; then
+		mkdir -p $(dirname "$JSTATD_PIDFILE")
+		mkdir -p $(dirname "$JSTATD_LOG")
+		chown $JSTATD_USER $(dirname "$JSTATD_PIDFILE") || true
+		
+		log_action_msg "Starting $JSTATD $JSTATD_OPTS" 
+		start-stop-daemon --start --user "$JSTATD_USER" \
+			--chuid "$JSTATD_USER" --chdir "$JSTATD_HOME" -m --pidfile "$JSTATD_PIDFILE" \
+			--exec "$JSTATD" --$JSTATD_OPTS >> "$JSTATD_LOG" 2>&1 &
+
+		sleep 3
+		if [ -f "$JSTATD_PIDFILE" ]; then
+			launched=0
+		else
+			launched=1
+		fi
+		
+		if check_status; then
+			log_end_msg 0
+		else
+			log_end_msg 1
+		fi
+
+		if [ $launched -eq 1 ]; then
+			log_warning_msg "$DESC hasn't started"
+			log_warning_msg "$DESC log file is \"$JSTATD_LOG\""
+		fi
+	elif [ $status_start -eq 1 ]; then
+		log_failure_msg "$DESC is not running but the pid file exists"
+		exit 1
+	elif [ $status_start -eq 0 ]; then
+		log_success_msg "$DESC (already running)"
+	fi
+ ;;
+ stop)
+	check_status
+	status_stop=$?
+	if [ $status_stop -eq 0 ]; then
+		log_daemon_msg "Stopping $DESC" "$NAME"
+		
+		#--remove-pidfile  since 1.17.19
+		start-stop-daemon --stop --quiet --pidfile "$JSTATD_PIDFILE" \
+		--user "$JSTATD_USER" --retry=TERM/$SHUTDOWN_WAIT/KILL/5 \
+		>> "$JSTATD_LOG" 2>&1
+		stopped=$?
+		
+		if [ $stopped -eq 0 ]; then
+			log_action_msg "$DESC has been stopped, cleaning up pid file"
+			rm -f $JSTATD_PIDFILE
+		elif [ $stopped -eq 2 ]; then
+			log_failure_msg "$DESC can't be stopped"
+			exit 1
+		fi
+		
+		log_end_msg 0
+	elif [ $status_stop -eq 1 ]; then
+		log_action_msg "$DESC is not running but the pid file exists, cleaning up"
+		rm -f $JSTATD_PIDFILE
+	elif [ $status_stop -eq 3 ]; then
+		log_action_msg "$DESC is not running"
+	fi
+ ;;
+ restart)
+	check_status
+	status_restart=$?
+	if [ $status_restart -eq 0 ]; then
+		$0 stop
+	fi
+	$0 start
+ ;;
+ reload|force-reload)
+	check_status
+	status_reload=$?
+	if [ $status_reload -eq 0 ]; then
+		log_daemon_msg "Reloading $DESC config" "$NAME"
+		log_daemon_msg "Reload not supported by $DESC"
+ 		log_end_msg 1
+	else
+		log_failure_msg "$DESC is not running"
+	fi
+ ;;
+ status)
+	check_status
+	status=$?
+	if [ $status -eq 0 ]; then
+		read pid < $JSTATD_PIDFILE
+		log_action_msg "$DESC is running with pid $pid"
+		exit 0
+	elif [ $status -eq 1 ]; then
+		log_action_msg "$DESC is not running and the pid file exists"
+		exit 1
+	elif [ $status -eq 3 ]; then
+		log_action_msg "$DESC is not running"
+		exit 3
+	else
+		log_action_msg "Unable to determine $NAME status"
+		exit 4
+	fi
+ ;;
+ *)
+ log_action_msg "Usage: $0 {start|stop|restart|reload|force-reload|status}"
+ exit 2
+ ;;
+esac
+
+exit 0

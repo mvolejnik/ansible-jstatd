@@ -1,0 +1,21 @@
+galaxy_info:
+  author: Michal Volejnik
+  description: 
+  license: BSD
+  
+  min_ansible_version: 1.2
+
+  #github_branch:
+  
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+ 
+  
+  galaxy_tags:
+    - java
+    - jstatd
+    - jvisualvm
+
+dependencies: []
