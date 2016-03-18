@@ -62,4 +62,4 @@ BSD, MIT
 Author Information
 ------------------
 
-Michal Volejni.
+Michal Volejnik https://github.com/mvolejnik .
