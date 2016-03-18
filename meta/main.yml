@@ -1,6 +1,8 @@
 galaxy_info:
   author: Michal Volejnik
-  description: 
+  description: "Role instal jstatd daemon on Linux (Debian) based systems with SysVinit service system.
+Tested on Ubuntu Server 14.04.04/trusty.
+Use jstatd **only on development and very low security environment**. Never use jstatd on production system, use JMX and authentication instead."
   license: BSD
   
   min_ansible_version: 1.2
