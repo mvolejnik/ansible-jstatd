@@ -7,3 +7,9 @@ JSTATD_LOG={{ jstatd_log }}
 JSTATD_USER={{ jstatd_user }}
 
 JSTATD_POLICY={{ jstatd_policy }}
+
+JSTATD_DEBUG_RMI={{ jstatd_debug_rmi }}
+
+JSTATD_RMI_HOSTNAME={{ ansible_fqdn }}
+
+JSTATD_OPTS={{ jstatd_opts }}

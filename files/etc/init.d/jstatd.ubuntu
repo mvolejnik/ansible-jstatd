@@ -75,8 +75,16 @@ if [ -z "$JSTATD_POLICY" ]; then
 	JSTATD_POLICY="/etc/jstatd.policy"
 fi
 
+if [ -z "$JSTATD_DEBUG_RMI" ]; then
+	JSTATD_DEBUG_RMI=false
+fi
+
+if [ -z "$JSTATD_RMI_HOSTNAME" ]; then
+	JSTATD_RMI_HOSTNAME=$(hostname -f)
+fi
+
 # space at beginning needed
-JSTATD_OPTS=" -J-Djava.security.policy=$JSTATD_POLICY"
+JSTATD_OPTS=" -J-Djava.security.policy=$JSTATD_POLICY -J-Djava.rmi.server.logCalls=$JSTATD_DEBUG_RMI -J-Djava.rmi.server.hostname=$JSTATD_RMI_HOSTNAME $JSTATD_OPTS"
 
 JSTATD_PIDFILE="/var/run/$NAME/$NAME.pid"
 

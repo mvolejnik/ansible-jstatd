@@ -6,3 +6,5 @@ jstatd_log: /var/log/jstatd.log
 jstatd_user: root
 jstatd_policy_permission: "java.security.AllPermission"
 jstatd_policy: "/etc/jstatd.policy"
+jstatd_debug_rmi: false
+jstatd_opts: 

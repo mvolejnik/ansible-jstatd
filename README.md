@@ -39,6 +39,14 @@ Java policy premissions used to start jstatd. By default All permissions are gra
 Jstatd policy file to use. Default value is jstatd.policy file createad by this Role. Default policy file created by this role cannot be changed, however jstatd can use any other policy file.
 	
 	jstatd_policy: "/etc/jstatd.policy"
+	
+Java RMI debug optin.
+	
+	jstatd_debug_rmi: false
+	
+Additional options, e.g. java.net.preferIPv4Stack or java.net.preferIPv6Addresses.
+	
+	jstatd_opts: 
 
 Dependencies
 ------------
